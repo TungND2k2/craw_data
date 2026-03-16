@@ -213,7 +213,7 @@ def run_auto(wattpad_url, voice, speed, backend_url, email, password, author_nam
             yield log(lines, f"  [SKIP] {ch['name']}: khong co text")
             continue
         try:
-            filename = f"Chuong {i + 1}.mp3"
+            filename = f"{title} - Chuong {i + 1}.mp3"
             job_id = submit_tts_job(text, voice=voice, speed=speed, filename=filename)
             jobs[i] = {
                 "name": ch["name"], "text": text,

@@ -242,7 +242,7 @@ def process_story(story_id: str):
                 continue
 
             update_chapter(story_id, i, text=text, tts_status="submitting")
-            filename = f"Chuong {i + 1}.mp3"
+            filename = f"{title} - Chuong {i + 1}.mp3"
             try:
                 job_id = submit_tts(text, voice, speed, filename=filename)
                 update_chapter(story_id, i, tts_job_id=job_id, tts_status="pending")
@@ -561,6 +561,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; colo
 
 <script>
 let storiesData = {};
+let openDetails = new Set();
 
 function submitStory() {
     const url = document.getElementById('urlInput').value.trim();
@@ -569,7 +570,8 @@ function submitStory() {
     btn.disabled = true;
     btn.textContent = 'Dang gui...';
 
-    fetch('/api/submit', {
+    const BASE = location.pathname.replace(/\/$/, '');
+    fetch(BASE + '/api/submit', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -626,8 +628,12 @@ function getProgress(story) {
 }
 
 function toggleDetail(storyId) {
-    const el = document.getElementById('detail-' + storyId);
-    if (el) el.classList.toggle('open');
+    if (openDetails.has(storyId)) {
+        openDetails.delete(storyId);
+    } else {
+        openDetails.add(storyId);
+    }
+    renderStories();
 }
 
 function renderStories() {
@@ -661,7 +667,8 @@ function renderStories() {
         html += '</div></div>';
         html += '<div class="progress-bar-bg"><div class="progress-bar" style="width:' + progress + '%"></div></div>';
 
-        html += '<div class="story-detail" id="detail-' + id + '">';
+        const isOpen = openDetails.has(id);
+        html += '<div class="story-detail' + (isOpen ? ' open' : '') + '" id="detail-' + id + '">';
         if (s.error) html += '<p style="color:#ef4444;margin-bottom:8px;font-size:0.85rem">Loi: ' + s.error + '</p>';
         if (s.chapters && s.chapters.length > 0) {
             html += '<ul class="chapter-list">';
@@ -684,7 +691,8 @@ function renderStories() {
 function connectSSE() {
     const dot = document.getElementById('connDot');
     const text = document.getElementById('connText');
-    const es = new EventSource('/api/events');
+    const BASE2 = location.pathname.replace(/\/$/, '');
+    const es = new EventSource(BASE2 + '/api/events');
 
     es.onopen = () => { dot.className = 'conn-status connected'; text.textContent = 'Da ket noi'; };
     es.onerror = () => { dot.className = 'conn-status disconnected'; text.textContent = 'Mat ket noi, dang thu lai...'; };
